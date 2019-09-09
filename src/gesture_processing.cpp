@@ -16,7 +16,7 @@ public:
    */
   GestureRecognizer()
   : message_counter_(0)
-  , max_count_(10)
+  , max_count_(20)
 
   {
     human_list_sub_ = nh_.subscribe("human_list", 1, &GestureRecognizer::humanListCallback, this);
@@ -79,6 +79,7 @@ private:
       gesture_code_msg_.data = std::round(average_gesture_code_);
       gesture_pub_.publish(gesture_code_msg_);
       message_counter_ = 0;
+			average_gesture_code_ = 0;
     }
   }
 
