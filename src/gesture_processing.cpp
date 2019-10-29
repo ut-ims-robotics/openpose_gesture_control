@@ -23,9 +23,8 @@ void chatterCallback(const openpose_ros_msgs::OpenPoseHumanList& msg)
     std::ofstream myfile;
     myfile.open("/home/igor/catkin_ws/src/openpose_gesture_control/src/kerneldata.txt",std::fstream::app);
     myfile << std::to_string(msg.human_list[0].body_key_points_with_prob[7].y);
-    myfile << "\n"; 
+    myfile << ";"; 
     myfile.close();
-    ROS_INFO_STREAM("I am writing!");
     if ((msg.human_list[0].body_key_points_with_prob[2].y > msg.human_list[0].body_key_points_with_prob[3].y) and (msg.human_list[0].body_key_points_with_prob[3].y > msg.human_list[0].body_key_points_with_prob[4].y) and (abs(msg.human_list[0].body_key_points_with_prob[5].y - msg.human_list[0].body_key_points_with_prob[6].y) < 50) and (abs(msg.human_list[0].body_key_points_with_prob[5].y - msg.human_list[0].body_key_points_with_prob[7].y) < 50))
     {
       identifier = 1;
@@ -65,6 +64,7 @@ void chatterCallback(const openpose_ros_msgs::OpenPoseHumanList& msg)
 }
 
 int main(int argc, char **argv)
+
 {
   ros::init(argc, argv, "listener");
   ros::NodeHandle n;

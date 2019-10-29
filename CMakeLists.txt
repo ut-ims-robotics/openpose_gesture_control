@@ -113,4 +113,6 @@ include_directories(
 add_executable(gesture_processing src/gesture_processing.cpp)
 add_dependencies(gesture_processing ${catkin_EXPORTED_TARGETS})
 target_link_libraries(gesture_processing ${catkin_LIBRARIES})
-
+add_executable(kernel_creation src/kernel_creation.cpp)
+add_dependencies(kernel_creation ${catkin_EXPORTED_TARGETS})
+target_link_libraries(kernel_creation ${catkin_LIBRARIES})
