@@ -13,6 +13,7 @@
 #include <cmath>
 #include "convolution.h"
 
+
 ///////////////////////////////////////////////////////////////////////////////
 // 1D convolution
 // We assume input and kernel signal start from t=0.
