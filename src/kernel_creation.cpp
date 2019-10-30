@@ -11,7 +11,7 @@ void chatterCallback(const openpose_ros_msgs::OpenPoseHumanList& msg)
     std::ofstream myfile;
     myfile.open("/home/igor/catkin_ws/src/openpose_gesture_control/src/kerneldata.txt",std::fstream::app);
     myfile << std::to_string(msg.human_list[0].body_key_points_with_prob[7].y);
-    myfile << ";"; 
+    myfile << "\n"; 
     myfile.close();
   }
 }
