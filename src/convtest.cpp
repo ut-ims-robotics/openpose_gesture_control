@@ -9,7 +9,7 @@
 std::string command;
 int identifier;
 bool command_received = false;
-float kernel[10]; //insert kernel here
+float kernel[10] = {410.625763, 416.360229, 277.042542, 206.577835, 137.832367, 101.580055, 116.835854, 172.149567, 420.138153, 435.410248}; 
 std::vector <float> intakeVec;
 int kernelSize = sizeof(kernel);
 int dataSize;
@@ -85,7 +85,12 @@ void chatterCallback(const openpose_ros_msgs::OpenPoseHumanList& msg)
       intakeVec.push_back(msg.human_list[0].body_key_points_with_prob[7].y);
       FromVec2Arr(intakeVec,intakeFloat);
       result = convolve1D(intakeFloat, outresultsFloat,dataSize,kernel,kernelSize);
-      ROS_INFO_STREAM(outresultsFloat);
+      if (result){
+        ROS_INFO_STREAM(outresultsFloat);
+      }
+      else {
+        ROS_INFO_STREAM("Oopps. Some problems happened.");
+      }
     }
   }
 }
