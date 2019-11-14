@@ -28,6 +28,10 @@ void FromVec2Arr(std::vector <float> inVec, float* outFloat)
   }
 }
 
+float map(float value, float istart, float istop, float ostart, float ostop) {
+	return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
+}
+
 std::vector <float> FromArr2Vec(std::vector <float> outVec, float* inFloat)
 {
   int i;
