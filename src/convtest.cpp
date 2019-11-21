@@ -2,98 +2,77 @@
 #include "openpose_ros_msgs/OpenPoseHumanList.h"
 #include "geometry_msgs/Twist.h"
 #include <cstdlib>
-#include "convolution.h"
 #include <iostream>
 #include <fstream>
+#include <vector>
 
 std::string command;
 int identifier;
 bool command_received = false;
-float kernel[10] = {410.625763, 416.360229, 277.042542, 206.577835, 137.832367, 101.580055, 116.835854, 172.149567, 420.138153, 435.410248}; 
-std::vector <float> intakeVec;
-int kernelSize = sizeof(kernel);
-int dataSize;
-std::vector <float> outresultsVec;
-bool result;
-float intakeFloat[10];
-float outresultsFloat[10];
+std::vector <float> intake = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
 
-void FromVec2Arr(std::vector <float> inVec, float* outFloat)
+
+
+
+
+
+std::vector<float> convolution(std::vector<float> intake, std::vector<float> kernel)
 {
-  int i;
-  dataSize = sizeof(inVec);
-  for(i = 0; i <= dataSize; ++i)
+  int i, j, k;
+  std::vector<float> out = {0.0};
+  int dataSize = intake.size();
+  int kernelSize = kernel.size();
+  if (dataSize == 0 || kernelSize == 0 || dataSize <= kernelSize)
   {
-    outFloat[i] = inVec[i];
+    return out;
   }
-}
-
-float map(float value, float istart, float istop, float ostart, float ostop) {
-	return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
-}
-
-std::vector <float> FromArr2Vec(std::vector <float> outVec, float* inFloat)
-{
-  int i;
-  dataSize = sizeof(inFloat);
-  for(i = 0; i <= dataSize; ++i)
+  for(i = kernelSize-1; i < dataSize; ++i)
   {
-    outVec[i] = inFloat[i];
+    out[i] = 0;
+
+    for(j = i, k = 0; k < kernelSize; --j, ++k)
+    {
+      out[i] += intake[j] * kernel[k];
+    }
   }
-  return outVec;
-}
 
-bool convolve1D(float* in, float* out, int dataSize, float* kernel, int kernelSize)
-{
-    int i, j, k;
+  for (i = 0; i < kernelSize - 1; ++i)
+  {
+    out[i] = 0;
 
-    // check validity of params
-    if(!in || !out || !kernel) return false;
-    if(dataSize <=0 || kernelSize <= 0) return false;
-
-    // start convolution from out[kernelSize-1] to out[dataSize-1] (last)
-    for(i = kernelSize-1; i < dataSize; ++i)
+    for(j = i, k = 0; j >= 0; --j, ++k)
     {
-        out[i] = 0;                             // init to 0 before accumulate
-
-        for(j = i, k = 0; k < kernelSize; --j, ++k)
-            out[i] += in[j] * kernel[k];
+      out[i] += intake[j] * kernel[k];
     }
+  }
 
-    // convolution from out[0] to out[kernelSize-2]
-    for(i = 0; i < kernelSize - 1; ++i)
-    {
-        out[i] = 0;                             // init to 0 before sum
-
-        for(j = i, k = 0; j >= 0; --j, ++k)
-            out[i] += in[j] * kernel[k];
-    }
-
-    return true;
+  return out;
 }
 
 geometry_msgs::Twist msg;
-float values[10];
 void chatterCallback(const openpose_ros_msgs::OpenPoseHumanList& msg)
 {
+  std::vector <float> kernel = {410.625763, 416.360229, 277.042542, 206.577835, 137.832367, 101.580055, 116.835854, 172.149567, 420.138153, 435.410248};
+  int kernelSize = kernel.size();
 	if (msg.num_humans > 0)
   {
-    dataSize = sizeof(intakeVec);
-    if (dataSize<10)
+    int dataSize = sizeof(intake);
+    if (dataSize<20)
     {
-      intakeVec.push_back(msg.human_list[0].body_key_points_with_prob[7].y);
+      intake.push_back(msg.human_list[0].body_key_points_with_prob[7].y);
     }
     else
     {
-      intakeVec.erase(intakeVec.begin());
-      intakeVec.push_back(msg.human_list[0].body_key_points_with_prob[7].y);
-      FromVec2Arr(intakeVec,intakeFloat);
-      result = convolve1D(intakeFloat, outresultsFloat,dataSize,kernel,kernelSize);
-      if (result){
-        ROS_INFO_STREAM(outresultsFloat);
+      intake.erase(intake.begin());
+      intake.push_back(msg.human_list[0].body_key_points_with_prob[7].y);
+      std::vector <float> result = convolution(intake,kernel);
+      if (result.size() > 0){
+        int s = result.size();
+        for (int i; i<=s; ++i)
+        ROS_INFO_STREAM(result[i]);
       }
       else {
-        ROS_INFO_STREAM("Oopps. Some problems happened.");
+        ROS_INFO_STREAM("Oops. Some problems happened.");
       }
     }
   }
