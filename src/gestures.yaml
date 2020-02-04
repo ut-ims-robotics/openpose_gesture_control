@@ -1,15 +1,17 @@
 gestures:
-  gesture_1: 
-    #which angles certain body parts should be to be considered a gesture
-    right_shoulder_angle:
-    right_elbow_angle:
-    left_shoulder_angle:
-    left_elbow_angle:
-    gesture_name: #put the name here
-    #how accurate this angles should be. By defaulft 10 degrees
-    RS_max_error: 10
-    RE_max_error: 10
-    LS_max_error: 10
-    LE_max_error: 10
+- gesture_name: #put the name here
+  #which angles certain body parts should be to be considered a gesture
+  right_shoulder:
+    angle:
+    error:
+  right_elbow:
+    angle:
+    error:
+  left_shoulder:
+    angle:
+    error:
+  left_elbow:
+    angle:
+    error:
 
   
