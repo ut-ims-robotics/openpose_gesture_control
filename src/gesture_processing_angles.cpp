@@ -49,6 +49,12 @@ float RSAngle, LSAngle, REAngle, LEAngle;
 
 float values[10];
 
+float remap(float value, float start1, float end1, float start2, float end2)
+{
+  float outgoing = start2 + (end2 - start2) * ((value - start1) / (end1 - start1));
+  return outgoing;
+}
+
 void chatterCallback(const openpose_ros_msgs::OpenPoseHumanList& pose_msg)
 {
   if (pose_msg.num_humans == 0)
@@ -119,11 +125,13 @@ void chatterCallback(const openpose_ros_msgs::OpenPoseHumanList& pose_msg)
     {
       float Neck_RShoulder_magnitude = sqrt(pow(Neck_RShoulder[0],2) + pow(Neck_RShoulder[1],2));
       float RElbow_RShoulder_magnitude = sqrt(pow(RElbow_RShoulder[0],2) + pow(RElbow_RShoulder[1],2));
-      angles[0] = acos((Neck_RShoulder[0]*LShoulder_LElbow[0] + Neck_RShoulder[1]*LShoulder_LElbow[1])/(Neck_RShoulder_magnitude*RElbow_RShoulder_magnitude));
+      angles[0] = acos((Neck_RShoulder[0]*RElbow_RShoulder[0] + Neck_RShoulder[1]*RElbow_RShoulder[1])/(Neck_RShoulder_magnitude*RElbow_RShoulder_magnitude));
+      angles[0] = atan2(Neck_RShoulder[0]*RElbow_RShoulder[0] + Neck_RShoulder[1]*RElbow_RShoulder[1], Neck_RShoulder[0]*RElbow_RShoulder[1] - Neck_RShoulder[1]*RElbow_RShoulder[0]);
 
       float RShoulder_RElbow_magnitude = sqrt(pow(RShoulder_RElbow[0],2) + pow(RShoulder_RElbow[1],2));
       float RWrist_RElbow_magnitude = sqrt(pow(RWrist_RElbow[0],2) + pow(RWrist_RElbow[1],2));
       angles[1] = acos((RShoulder_RElbow[0]*RWrist_RElbow[0] + RShoulder_RElbow[1]*RWrist_RElbow[1])/(RShoulder_RElbow_magnitude*RWrist_RElbow_magnitude));
+      angles[1] = atan2(RShoulder_RElbow[0]*RWrist_RElbow[0] + RShoulder_RElbow[1]*RWrist_RElbow[1],RShoulder_RElbow[0]*RWrist_RElbow[1] - RShoulder_RElbow[1]*RWrist_RElbow[0]);
     }
 
     //calculating left arm angles
@@ -137,10 +145,17 @@ void chatterCallback(const openpose_ros_msgs::OpenPoseHumanList& pose_msg)
       float Neck_LShoulder_magnitude = sqrt(pow(Neck_LShoulder[0],2) + pow(Neck_LShoulder[1],2));
       float LElbow_LShoulder_magnitude = sqrt(pow(LElbow_LShoulder[0],2) + pow(LElbow_LShoulder[1],2));
       angles[2] = acos((Neck_LShoulder[0]*LShoulder_LElbow[0] + Neck_LShoulder[1]*LShoulder_LElbow[1])/(Neck_LShoulder_magnitude*LElbow_LShoulder_magnitude));
+      angles[2] = atan2(Neck_LShoulder[0]*LElbow_LShoulder[0] + Neck_LShoulder[1]*LElbow_LShoulder[1], Neck_LShoulder[0]*LElbow_LShoulder[1] - Neck_LShoulder[1]*LElbow_LShoulder[0]);
 
       float LShoulder_LElbow_magnitude = sqrt(pow(LShoulder_LElbow[0],2) + pow(LShoulder_LElbow[1],2));
       float LWrist_LElbow_magnitude = sqrt(pow(LWrist_LElbow[0],2) + pow(LWrist_LElbow[1],2));
-      angles[3] = acos((LShoulder_LElbow[0]*LWrist_LElbow[0] + LShoulder_LElbow[1]*LWrist_LElbow[1])/(LShoulder_LElbow_magnitude*LWrist_LElbow_magnitude)); 
+      angles[3] = acos((LShoulder_LElbow[0]*LWrist_LElbow[0] + LShoulder_LElbow[1]*LWrist_LElbow[1])/(LShoulder_LElbow_magnitude*LWrist_LElbow_magnitude));
+      angles[3] = atan2(LShoulder_LElbow[0]*LWrist_LElbow[0] + LShoulder_LElbow[1]*LWrist_LElbow[1],LShoulder_LElbow[0]*LWrist_LElbow[1] - LShoulder_LElbow[1]*LWrist_LElbow[0]); 
+    }
+    for (int i = 0; i < angles.size(); i++)
+    {
+      angles[i] = angles[i] * 180/M_PI;
+      angles[i] = remap(angles[i], -180, 180, 0, 360);
     }
     std::cout << "RShoulder: " << angles[0] << std::endl << "RElbow: " << angles[1] << std::endl << "LShoulder: " << angles[2] << std::endl << "LElbow: " << angles[3] << std::endl;
     
@@ -213,12 +228,6 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "gesture_processer");
   ros::NodeHandle nh;
   ros::Subscriber sub = nh.subscribe("/openpose_ros/human_list", 1000, chatterCallback);
-  ros::AsyncSpinner spinner(4);
-	  spinner.start();
-  while (ros::ok)
-  {
-    ROS_INFO_STREAM("Working...");
-    ros::Duration(0.05).sleep;
-  }
+  ros::spin();
   return 0;
 }
