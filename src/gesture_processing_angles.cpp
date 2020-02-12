@@ -1,18 +1,15 @@
 #include "ros/ros.h"
 #include "openpose_ros_msgs/OpenPoseHumanList.h"
 #include "openpose_ros_msgs/PointWithProb.h"
+#include "std_msgs/String.h"
 #include "geometry_msgs/Twist.h"
 #include <cstdlib>
-#include "convolution.h"
 #include <iostream>
 #include <fstream>
 #include "math.h"
 #include <vector>
 #include "yaml-cpp/yaml.h"
-#include "boost/variant.hpp"
 
-std::string command;
-int identifier;
 bool command_received = false;
 
 //for arm check later
@@ -25,7 +22,7 @@ std::vector <float> Neck_RShoulder = {0.0, 0.0};
 std::vector <float> RElbow_RShoulder = {0.0, 0.0};
 std::vector <float> RShoulder_RElbow = {0.0, 0.0};
 std::vector <float> RWrist_RElbow = {0.0, 0.0};
-// Left  hand
+// Left hand
 std::vector <float> Neck_LShoulder = {0.0, 0.0};
 std::vector <float> LElbow_LShoulder = {0.0, 0.0};
 std::vector <float> LShoulder_LElbow = {0.0, 0.0};
@@ -43,18 +40,8 @@ std::vector <std::string> pose_names;
 //For yaml parser
 YAML::Node gestures;
 
-std::vector <float> right_pose = {3.0, -1.25, 1000, 1000};
-std::vector <float> left_pose = {1000, 1000, 0.15, 1.5};
-std::vector <float> forward_pose = {4.3, -2.45, -1.25, 0.12};
-std::vector <float> stop_pose = {4.3, -2.45, 1000, 1000};
-
-
 //info about all needed keypoints
 openpose_ros_msgs::PointWithProb Neck, RShoulder, RElbow, RWrist, LShoulder, LElbow, LWrist;
-
-float RSAngle, LSAngle, REAngle, LEAngle;
-
-float values[10];
 
 float remap(float value, float start1, float end1, float start2, float end2)
 {
@@ -200,25 +187,29 @@ int main(int argc, char **argv)
   parser_init();
   ros::Duration(2).sleep();
   std::cout << "I am ready!" << std::endl;
-  ros::Subscriber sub = nh.subscribe("openpose_ros/human_list", 3, Pose_to_angle);
+  ros::Subscriber sub = nh.subscribe("openpose_ros/human_list", 1, Pose_to_angle);
+  ros::Publisher pub = nh.advertise<std_msgs::String>("openpose_ros/found_pose", 1);
   while(ros::ok)
   {
     ros::spinOnce();
     std::string final_pose = "none";
-    float sum_of_errors = 1500.0;
+    std_msgs::String pose_msg;
+    float sum_of_errors = 1500.0; //just some big value to make sure any valid pose will be recogised
+
+    //checking ol poses which were parsed from yaml file
     for (int pose_num = 0; pose_num < ref_angles_for_pose.size(); pose_num++)
     {
-      float errors_in_loop = 0.0;
-      float empty_angles = 0.0;
-      int iterations = 0;
+      float errors_in_loop = 0.0; //to count total error made by user to find later the pose with highest probability
+      int empty_angles = 0; //to make total error calculation more fair later
       for (int angle_num = 0; angle_num < angles.size(); angle_num++)
       {
         if (ref_error_for_pose[pose_num][angle_num] == 360)
         {
           empty_angles++;
-          iterations++;
           continue;
         }
+        // check if user error is in allowed range if no, ignore the whole pose and reset total error variable, else add this to total error of the pose for later use
+        // do something about region near 0-360
         if ((ref_error_for_pose[pose_num][angle_num] < fabs(ref_angles_for_pose[pose_num][angle_num] - angles[angle_num]) || fabs(ref_angles_for_pose[pose_num][angle_num] - angles[angle_num]) > 360.0 - ref_error_for_pose[pose_num][angle_num]))
         {
           errors_in_loop = 0.0;
@@ -227,17 +218,18 @@ int main(int argc, char **argv)
         else
         {
           errors_in_loop += fabs(ref_angles_for_pose[pose_num][angle_num] - angles[angle_num]);
-          iterations++;
         }
       }
-      //add check of empty_angles variable to prevent division by 0
-      if ((sum_of_errors > errors_in_loop/(4-empty_angles)) and (errors_in_loop != 0.0))
+      //add check of empty_angles variable to prevent division by 0 (maybe done)
+      if ((sum_of_errors > errors_in_loop/(4.0-empty_angles + 0.0001)) and (errors_in_loop != 0.0))
       {
         sum_of_errors = errors_in_loop/(4-empty_angles);
         final_pose = pose_names[pose_num];
       }
     }
     std::cout << final_pose << std::endl;
+    pose_msg.data = final_pose;
+    pub.publish(pose_msg);
     ros::Rate(10).sleep();
   }
   return 0;
