@@ -1,12 +1,11 @@
 gestures:
 - gesture_name: "right"
-  #which angles certain body parts should be to be considered a gesture
   right_shoulder:
     angle: 90.0
-    error: 10.0
+    error: 20.0
   right_elbow:
-    angle: 90.0
-    error: 10.0
+    angle: 0.0
+    error: 20.0
   left_shoulder:
     angle: 0.0
     error: 360.0
@@ -22,10 +21,36 @@ gestures:
     error: 360.0
   left_shoulder:
     angle: 270.0
-    error: 10.0
+    error: 20.0
+  left_elbow:
+    angle: 0.0
+    error: 20.0
+- gesture_name: "forward"
+  right_shoulder:
+    angle: 0.0
+    error: 45.0
+  right_elbow:
+    angle: 90.0
+    error: 360.0
+  left_shoulder:
+    angle: 350.0
+    error: 45.0
   left_elbow:
     angle: 270.0
-    error: 10.0
+    error: 360.0
+- gesture_name: "stop"
+  right_shoulder:
+    angle: 0.0
+    error: 20.0
+  right_elbow:
+    angle: 90.0
+    error: 20.0
+  left_shoulder:
+    angle: 0.0
+    error: 360.0
+  left_elbow:
+    angle: 0.0
+    error: 360.0
 
 
 

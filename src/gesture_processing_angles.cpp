@@ -152,7 +152,7 @@ void Pose_to_angle(const openpose_ros_msgs::OpenPoseHumanList& pose_msg)
       angles[i] = angles[i] * 180/M_PI;
       angles[i] = remap(angles[i], -180, 180, 0, 360);
     }
-    std::cout << "RShoulder: " << angles[0] << std::endl << "RElbow: " << angles[1] << std::endl << "LShoulder: " << angles[2] << std::endl << "LElbow: " << angles[3] << std::endl;
+    //std::cout << "RShoulder: " << angles[0] << std::endl << "RElbow: " << angles[1] << std::endl << "LShoulder: " << angles[2] << std::endl << "LElbow: " << angles[3] << std::endl;
   }
 }
 
@@ -200,40 +200,45 @@ int main(int argc, char **argv)
   parser_init();
   ros::Duration(2).sleep();
   std::cout << "I am ready!" << std::endl;
-  ros::Subscriber sub = nh.subscribe("/openpose_ros/human_list", 1, Pose_to_angle);
+  ros::Subscriber sub = nh.subscribe("openpose_ros/human_list", 3, Pose_to_angle);
   while(ros::ok)
   {
+    ros::spinOnce();
     std::string final_pose = "none";
     float sum_of_errors = 1500.0;
     for (int pose_num = 0; pose_num < ref_angles_for_pose.size(); pose_num++)
     {
-      float errors_in_loop = 0;
-      float empty_angles = 0;
+      float errors_in_loop = 0.0;
+      float empty_angles = 0.0;
+      int iterations = 0;
       for (int angle_num = 0; angle_num < angles.size(); angle_num++)
       {
         if (ref_error_for_pose[pose_num][angle_num] == 360)
         {
           empty_angles++;
+          iterations++;
           continue;
         }
-        if (ref_error_for_pose[pose_num][angle_num] < fabs(ref_angles_for_pose[pose_num][angle_num] - angles[angle_num]))
+        if ((ref_error_for_pose[pose_num][angle_num] < fabs(ref_angles_for_pose[pose_num][angle_num] - angles[angle_num]) || fabs(ref_angles_for_pose[pose_num][angle_num] - angles[angle_num]) > 360.0 - ref_error_for_pose[pose_num][angle_num]))
         {
-          errors_in_loop = 0;
+          errors_in_loop = 0.0;
           break;
         }
         else
         {
           errors_in_loop += fabs(ref_angles_for_pose[pose_num][angle_num] - angles[angle_num]);
+          iterations++;
         }
       }
-      //add check of ampty_angles variable to prevent division by 0
-      if (sum_of_errors < errors_in_loop/(4-empty_angles) && errors_in_loop != 0.0)
+      //add check of empty_angles variable to prevent division by 0
+      if ((sum_of_errors > errors_in_loop/(4-empty_angles)) and (errors_in_loop != 0.0))
       {
         sum_of_errors = errors_in_loop/(4-empty_angles);
         final_pose = pose_names[pose_num];
       }
     }
     std::cout << final_pose << std::endl;
+    ros::Rate(10).sleep();
   }
   return 0;
 }
