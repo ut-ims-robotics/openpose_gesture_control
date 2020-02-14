@@ -208,9 +208,14 @@ int main(int argc, char **argv)
           empty_angles++;
           continue;
         }
+        float error = fabs(ref_angles_for_pose[pose_num][angle_num] - angles[angle_num]);
+        if (error >= 180.0)
+        {
+          error = 360.0 - error;
+        }
         // check if user error is in allowed range if no, ignore the whole pose and reset total error variable, else add this to total error of the pose for later use
-        //TODO do something with region near 0|360
-        if ((ref_error_for_pose[pose_num][angle_num] < fabs(ref_angles_for_pose[pose_num][angle_num] - angles[angle_num]) || fabs(ref_angles_for_pose[pose_num][angle_num] - angles[angle_num]) > 360.0 - ref_error_for_pose[pose_num][angle_num]))
+        // TODO do something with region near 0|360 (maybe done. should be tested)
+        if (ref_error_for_pose[pose_num][angle_num] < error)
         {
           errors_in_loop = 0.0;
           break;
@@ -218,15 +223,7 @@ int main(int argc, char **argv)
         else
         //TODO do something with region near 0|360
         {
-          if (fabs(ref_angles_for_pose[pose_num][angle_num] - angles[angle_num]) <= 180)
-          {
-          errors_in_loop += fabs(ref_angles_for_pose[pose_num][angle_num] - angles[angle_num]);
-          }
-          else
-          {
-            errors_in_loop += 360.0 - fabs(ref_angles_for_pose[pose_num][angle_num] - angles[angle_num]);
-          }
-          
+          errors_in_loop += error;
         }
       }
       //TODO add check of empty_angles variable to prevent division by 0 (maybe done)
