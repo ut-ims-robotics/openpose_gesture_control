@@ -214,20 +214,25 @@ int main(int argc, char **argv)
           error = 360.0 - error;
         }
         // check if user error is in allowed range if no, ignore the whole pose and reset total error variable, else add this to total error of the pose for later use
-        // TODO do something with region near 0|360 (maybe done. should be tested)
         if (ref_error_for_pose[pose_num][angle_num] < error)
         {
           errors_in_loop = 0.0;
           break;
         }
         else
-        //TODO do something with region near 0|360
         {
           errors_in_loop += error;
         }
       }
       //TODO add check of empty_angles variable to prevent division by 0 (maybe done)
-      if ((sum_of_errors > errors_in_loop/(4.0-empty_angles + 0.0001)) and (errors_in_loop != 0.0))
+      if (empty_angles == 4)
+      {
+        if (final_pose == "none")
+        {
+          final_pose = pose_names[pose_num];
+        }
+      }
+      else if ((sum_of_errors > errors_in_loop/(4.0-empty_angles)) and (errors_in_loop != 0.0))
       {
         sum_of_errors = errors_in_loop/(4-empty_angles);
         final_pose = pose_names[pose_num];
