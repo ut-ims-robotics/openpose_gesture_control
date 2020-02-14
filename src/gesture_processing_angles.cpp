@@ -139,7 +139,7 @@ void Pose_to_angle(const openpose_ros_msgs::OpenPoseHumanList& pose_msg)
       angles[i] = angles[i] * 180/M_PI;
       angles[i] = remap(angles[i], -180, 180, 0, 360);
     }
-    //std::cout << "RShoulder: " << angles[0] << std::endl << "RElbow: " << angles[1] << std::endl << "LShoulder: " << angles[2] << std::endl << "LElbow: " << angles[3] << std::endl;
+    std::cout << "RShoulder: " << angles[0] << std::endl << "RElbow: " << angles[1] << std::endl << "LShoulder: " << angles[2] << std::endl << "LElbow: " << angles[3] << std::endl;
   }
 }
 
@@ -209,18 +209,27 @@ int main(int argc, char **argv)
           continue;
         }
         // check if user error is in allowed range if no, ignore the whole pose and reset total error variable, else add this to total error of the pose for later use
-        // do something about region near 0-360
+        //TODO do something with region near 0|360
         if ((ref_error_for_pose[pose_num][angle_num] < fabs(ref_angles_for_pose[pose_num][angle_num] - angles[angle_num]) || fabs(ref_angles_for_pose[pose_num][angle_num] - angles[angle_num]) > 360.0 - ref_error_for_pose[pose_num][angle_num]))
         {
           errors_in_loop = 0.0;
           break;
         }
         else
+        //TODO do something with region near 0|360
         {
+          if (fabs(ref_angles_for_pose[pose_num][angle_num] - angles[angle_num]) <= 180)
+          {
           errors_in_loop += fabs(ref_angles_for_pose[pose_num][angle_num] - angles[angle_num]);
+          }
+          else
+          {
+            errors_in_loop += 360.0 - fabs(ref_angles_for_pose[pose_num][angle_num] - angles[angle_num]);
+          }
+          
         }
       }
-      //add check of empty_angles variable to prevent division by 0 (maybe done)
+      //TODO add check of empty_angles variable to prevent division by 0 (maybe done)
       if ((sum_of_errors > errors_in_loop/(4.0-empty_angles + 0.0001)) and (errors_in_loop != 0.0))
       {
         sum_of_errors = errors_in_loop/(4-empty_angles);
